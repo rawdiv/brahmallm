@@ -1,0 +1,712 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Brahma LLM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1>Dashboard</h1>
+            <div>
+                <button class="btn btn-primary me-2" id="upload-model-btn">
+                    <i class="bi bi-cloud-upload"></i> Upload Model
+                </button>
+                <button class="btn btn-outline-primary" id="start-training-btn">
+                    <i class="bi bi-gear"></i> Start Training
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card shadow-sm stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-value" id="model-count">0</p>
+                <p class="stat-label">Models</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-database"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-value" id="dataset-count">0</p>
+                <p class="stat-label">Datasets</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-gear"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-value" id="training-count">0</p>
+                <p class="stat-label">Training Jobs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-key"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-value" id="api-key-count">0</p>
+                <p class="stat-label">API Keys</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Models</h5>
+                <button class="btn btn-sm btn-outline-primary" id="refresh-models-btn">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="models-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">Loading models...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Datasets</h5>
+                <button class="btn btn-sm btn-outline-primary" id="upload-dataset-btn">
+                    <i class="bi bi-upload"></i> Upload
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Samples</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="datasets-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">Loading datasets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Training Jobs</h5>
+                <button class="btn btn-sm btn-outline-primary" id="refresh-training-btn">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Model Size</th>
+                                <th>Dataset</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="training-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No training jobs found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Model Modal -->
+<div class="modal fade" id="uploadModelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-model-form">
+                    <div class="mb-3">
+                        <label for="model-name" class="form-label">Model Name</label>
+                        <input type="text" class="form-control" id="model-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="model-file" class="form-label">Model File (.pt or .bin)</label>
+                        <input type="file" class="form-control" id="model-file" accept=".pt,.bin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="config-file" class="form-label">Config File (optional)</label>
+                        <input type="file" class="form-control" id="config-file" accept=".json">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="upload-model-submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Dataset Modal -->
+<div class="modal fade" id="uploadDatasetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Dataset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-dataset-form">
+                    <div class="mb-3">
+                        <label for="dataset-name" class="form-label">Dataset Name</label>
+                        <input type="text" class="form-control" id="dataset-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dataset-file" class="form-label">Dataset File (.jsonl)</label>
+                        <input type="file" class="form-control" id="dataset-file" accept=".jsonl" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dataset-type" class="form-label">Dataset Type</label>
+                        <select class="form-select" id="dataset-type" required>
+                            <option value="train">Training</option>
+                            <option value="val">Validation</option>
+                            <option value="test">Test</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="upload-dataset-submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Training Modal -->
+<div class="modal fade" id="startTrainingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Start Training</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="start-training-form">
+                    <div class="mb-3">
+                        <label for="training-name" class="form-label">Training Name</label>
+                        <input type="text" class="form-control" id="training-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="training-dataset" class="form-label">Training Dataset</label>
+                        <select class="form-select" id="training-dataset" required>
+                            <option value="">Select a dataset</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="model-size" class="form-label">Model Size</label>
+                        <select class="form-select" id="model-size" required>
+                            <option value="small">Small (125M)</option>
+                            <option value="medium">Medium (350M)</option>
+                            <option value="large">Large (1.3B)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="learning-rate" class="form-label">Learning Rate</label>
+                        <input type="number" class="form-control" id="learning-rate" value="0.0001" step="0.00001" min="0.00001" max="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="batch-size" class="form-label">Batch Size</label>
+                        <input type="number" class="form-control" id="batch-size" value="4" min="1" max="64" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="start-training-submit">Start Training</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    // Fetch dashboard data
+    fetchDashboardData();
+    
+    // Set up modal triggers
+    document.getElementById('upload-model-btn').addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('uploadModelModal'));
+        modal.show();
+    });
+    
+    document.getElementById('upload-dataset-btn').addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('uploadDatasetModal'));
+        modal.show();
+    });
+    
+    document.getElementById('start-training-btn').addEventListener('click', function() {
+        // Fetch datasets for dropdown
+        fetchDatasetsForTraining();
+        const modal = new bootstrap.Modal(document.getElementById('startTrainingModal'));
+        modal.show();
+    });
+    
+    // Set up form submissions
+    setupFormSubmissions();
+});
+
+// Fetch dashboard data from API
+async function fetchDashboardData() {
+    try {
+        const [modelsRes, datasetsRes, trainingRes, apiKeysRes] = await Promise.all([
+            apiRequest('/web/models'),
+            apiRequest('/web/datasets'),
+            apiRequest('/web/training-jobs'),
+            apiRequest('/api-keys')
+        ]);
+        
+        const [models, datasets, trainingJobs, apiKeys] = await Promise.all([
+            modelsRes.json(),
+            datasetsRes.json(),
+            trainingRes.json(),
+            apiKeysRes.json()
+        ]);
+        
+        // Update stats
+        document.getElementById('model-count').textContent = models.length;
+        document.getElementById('dataset-count').textContent = datasets.length;
+        document.getElementById('training-count').textContent = trainingJobs.length;
+        document.getElementById('api-key-count').textContent = apiKeys.length;
+        
+        // Update tables
+        updateModelsTable(models);
+        updateDatasetsTable(datasets);
+        updateTrainingTable(trainingJobs);
+        
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        showAlert('Failed to load dashboard data', 'danger');
+    }
+}
+
+// Update models table
+function updateModelsTable(models) {
+    const tableBody = document.getElementById('models-table-body');
+    
+    if (models.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-4">No models found</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = models.map(model => `
+        <tr>
+            <td>${model.name}</td>
+            <td>${model.size}</td>
+            <td>${formatDate(model.created_at)}</td>
+            <td><span class="badge bg-success">Ready</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary select-model-btn" data-model-id="${model.id}">
+                        <i class="bi bi-check"></i>
+                    </button>
+                    <button class="btn btn-outline-danger delete-model-btn" data-model-id="${model.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Update datasets table
+function updateDatasetsTable(datasets) {
+    const tableBody = document.getElementById('datasets-table-body');
+    
+    if (datasets.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-4">No datasets found</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = datasets.map(dataset => `
+        <tr>
+            <td>${dataset.name}</td>
+            <td>${dataset.sample_count.toLocaleString()}</td>
+            <td>${formatFileSize(dataset.size_bytes)}</td>
+            <td>${formatDate(dataset.uploaded_at)}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary view-dataset-btn" data-dataset-id="${dataset.id}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-danger delete-dataset-btn" data-dataset-id="${dataset.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Update training jobs table
+function updateTrainingTable(jobs) {
+    const tableBody = document.getElementById('training-table-body');
+    
+    if (jobs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">No training jobs found</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = jobs.map(job => {
+        let statusBadge = '';
+        switch (job.status) {
+            case 'running':
+                statusBadge = '<span class="badge bg-primary">Running</span>';
+                break;
+            case 'completed':
+                statusBadge = '<span class="badge bg-success">Completed</span>';
+                break;
+            case 'failed':
+                statusBadge = '<span class="badge bg-danger">Failed</span>';
+                break;
+            case 'pending':
+                statusBadge = '<span class="badge bg-warning">Pending</span>';
+                break;
+            default:
+                statusBadge = `<span class="badge bg-secondary">${job.status}</span>`;
+        }
+        
+        let progressBar = '';
+        if (job.status === 'running') {
+            progressBar = `
+                <div class="progress" style="height: 5px; width: 100px;">
+                    <div class="progress-bar" role="progressbar" style="width: ${job.progress}%"></div>
+                </div>
+                <small>${job.progress}%</small>
+            `;
+        } else if (job.status === 'completed') {
+            progressBar = '100%';
+        } else {
+            progressBar = '-';
+        }
+        
+        return `
+            <tr>
+                <td>${job.id.substr(0, 8)}</td>
+                <td>${job.model_size}</td>
+                <td>${job.dataset_name}</td>
+                <td>${statusBadge}</td>
+                <td>${progressBar}</td>
+                <td>${formatDate(job.started_at)}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary view-logs-btn" data-job-id="${job.id}">
+                            <i class="bi bi-file-text"></i>
+                        </button>
+                        <button class="btn btn-outline-danger ${job.status === 'running' ? '' : 'd-none'} cancel-job-btn" data-job-id="${job.id}">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Fetch datasets for training
+async function fetchDatasetsForTraining() {
+    try {
+        const response = await apiRequest('/web/datasets?type=train');
+        const datasets = await response.json();
+        
+        const select = document.getElementById('training-dataset');
+        
+        // Clear previous options except the first one
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        
+        // Add dataset options
+        datasets.forEach(dataset => {
+            const option = document.createElement('option');
+            option.value = dataset.id;
+            option.textContent = `${dataset.name} (${dataset.sample_count.toLocaleString()} samples)`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error fetching datasets:', error);
+        showAlert('Failed to load datasets', 'warning');
+    }
+}
+
+// Set up form submissions
+function setupFormSubmissions() {
+    // Upload model
+    document.getElementById('upload-model-submit').addEventListener('click', async function() {
+        const form = document.getElementById('upload-model-form');
+        const modelName = document.getElementById('model-name').value;
+        const modelFile = document.getElementById('model-file').files[0];
+        const configFile = document.getElementById('config-file').files[0];
+        
+        if (!modelName || !modelFile) {
+            showAlert('Please fill in all required fields', 'warning');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('name', modelName);
+            formData.append('model_file', modelFile);
+            if (configFile) {
+                formData.append('config_file', configFile);
+            }
+            
+            const response = await apiRequest('/web/upload-model', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModelModal'));
+                modal.hide();
+                form.reset();
+                showAlert('Model uploaded successfully', 'success');
+                fetchDashboardData();
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to upload model', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error uploading model: ' + error.message, 'danger');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = 'Upload';
+        }
+    });
+    
+    // Upload dataset
+    document.getElementById('upload-dataset-submit').addEventListener('click', async function() {
+        const form = document.getElementById('upload-dataset-form');
+        const datasetName = document.getElementById('dataset-name').value;
+        const datasetFile = document.getElementById('dataset-file').files[0];
+        const datasetType = document.getElementById('dataset-type').value;
+        
+        if (!datasetName || !datasetFile) {
+            showAlert('Please fill in all required fields', 'warning');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('name', datasetName);
+            formData.append('dataset_file', datasetFile);
+            formData.append('type', datasetType);
+            
+            const response = await apiRequest('/web/upload-dataset', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadDatasetModal'));
+                modal.hide();
+                form.reset();
+                showAlert('Dataset uploaded successfully', 'success');
+                fetchDashboardData();
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to upload dataset', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error uploading dataset: ' + error.message, 'danger');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = 'Upload';
+        }
+    });
+    
+    // Start training
+    document.getElementById('start-training-submit').addEventListener('click', async function() {
+        const form = document.getElementById('start-training-form');
+        const trainingName = document.getElementById('training-name').value;
+        const dataset = document.getElementById('training-dataset').value;
+        const modelSize = document.getElementById('model-size').value;
+        const learningRate = document.getElementById('learning-rate').value;
+        const batchSize = document.getElementById('batch-size').value;
+        
+        if (!trainingName || !dataset) {
+            showAlert('Please fill in all required fields', 'warning');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Starting...';
+        
+        try {
+            const response = await apiRequest('/web/start-training', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: trainingName,
+                    dataset_id: dataset,
+                    model_size: modelSize,
+                    learning_rate: parseFloat(learningRate),
+                    batch_size: parseInt(batchSize)
+                })
+            });
+            
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('startTrainingModal'));
+                modal.hide();
+                form.reset();
+                showAlert('Training job started successfully', 'success');
+                fetchDashboardData();
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to start training', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error starting training: ' + error.message, 'danger');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = 'Start Training';
+        }
+    });
+}
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let size = bytes / 1024;
+    let unitIndex = 0;
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
+    
+    return size.toFixed(1) + ' ' + units[unitIndex];
+}
+
+// Make authenticated API request
+async function apiRequest(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString();
+}
+
+// Show alert
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+            if (alertContainer.contains(alert)) {
+                alertContainer.removeChild(alert);
+            }
+        }, 150);
+    }, 5000);
+}
+</script>
+{% endblock %}

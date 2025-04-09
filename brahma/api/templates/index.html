@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Brahma LLM - Advanced AI Platform{% endblock %}
+
+{% block content %}
+<div class="row align-items-center hero-section py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold display-text">Brahma <span class="glow-text">LLM</span></h1>
+        <h2 class="mb-4 display-text" style="color: var(--accent-color);">Next-Gen AI Platform</h2>
+        <p class="lead mb-4" style="color: var(--text-secondary); font-size: 1.2rem;">
+            Build, train, and deploy your own state-of-the-art language models with unprecedented control. 
+            Harness the power of transformer architecture with a user-friendly interface.
+        </p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+            <a href="/register" class="btn btn-primary btn-lg px-4 me-md-2 floating"><i class="bi bi-rocket-takeoff"></i> Get Started</a>
+            <a href="/docs" class="btn btn-outline-light btn-lg px-4"><i class="bi bi-code-slash"></i> API Docs</a>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="badge me-2" id="model-status-badge" style="background: rgba(76, 201, 240, 0.2); border: 1px solid var(--accent-color); color: var(--accent-bright); padding: 8px 12px; border-radius: 8px;">
+                <i class="bi bi-check-circle"></i> 
+                <span id="model-status">System Online</span>
+            </div>
+            <small style="color: var(--text-secondary);">Platform Status</small>
+        </div>
+    </div>
+    <div class="col-lg-6 mt-5 mt-lg-0">
+        <div class="card shadow-lg">
+            <div class="card-header py-3">
+                <h5 class="mb-0"><i class="bi bi-stars"></i> Experience Brahma AI</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label for="demo-prompt" class="form-label">Enter your prompt</label>
+                    <textarea class="form-control" id="demo-prompt" rows="3" placeholder="Explain quantum computing as if I'm five years old..."></textarea>
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-primary" id="generate-btn" type="button">
+                        <i class="bi bi-lightning-charge"></i> Generate Response
+                    </button>
+                </div>
+                <div class="mt-4 d-none" id="result-container">
+                    <div class="p-3 rounded" style="background: rgba(76, 201, 240, 0.1); border: 1px solid rgba(108, 99, 255, 0.2);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0" style="color: var(--accent-color);"><i class="bi bi-cpu"></i> AI Response</h6>
+                            <button class="btn btn-sm btn-outline-light copy-btn" data-target="demo-result">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                        <div id="demo-result" class="demo-result p-2" style="color: var(--text-primary); font-family: 'Rajdhani', sans-serif; min-height: 80px; position: relative;"></div>
+                        <div class="cursor-blink position-absolute" style="display: none; width: 2px; height: 18px; background-color: var(--accent-bright);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-5 my-5 position-relative">
+    <div class="position-absolute" style="width: 150px; height: 150px; background: radial-gradient(circle, rgba(108, 99, 255, 0.2) 0%, rgba(0,0,0,0) 70%); top: -75px; left: 20%; z-index: -1;"></div>
+    <div class="position-absolute" style="width: 200px; height: 200px; background: radial-gradient(circle, rgba(76, 201, 240, 0.15) 0%, rgba(0,0,0,0) 70%); bottom: -100px; right: 10%; z-index: -1;"></div>
+    
+    <h2 class="text-center mb-5 display-text">Explore <span class="glow-text">Brahma</span> Features</h2>
+    
+    <div class="row g-4 py-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="feature-icon mb-3" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(108, 99, 255, 0.2); display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-chat-dots" style="font-size: 1.5rem; color: var(--accent-color);"></i>
+                    </div>
+                    <h5 class="card-title" style="font-family: 'Orbitron', sans-serif;">
+                        Neural Chat Interface
+                    </h5>
+                    <p class="card-text" style="color: var(--text-secondary);">
+                        Engage in fluid conversations with your trained models. Fine-tune responses and test capabilities in real-time.
+                    </p>
+                    <a href="/chat" class="btn btn-outline-light mt-2"><i class="bi bi-arrow-right-circle"></i> Launch Chat</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="feature-icon mb-3" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(76, 201, 240, 0.2); display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-braces" style="font-size: 1.5rem; color: var(--accent-bright);"></i>
+                    </div>
+                    <h5 class="card-title" style="font-family: 'Orbitron', sans-serif;">
+                        Quantum Playground
+                    </h5>
+                    <p class="card-text" style="color: var(--text-secondary);">
+                    Experiment with advanced parameters and settings to fine-tune your model's generation capabilities and creative outputs.
+                </p>
+                <a href="/playground" class="btn btn-outline-light mt-2"><i class="bi bi-sliders"></i> Open Playground</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="feature-icon mb-3" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0, 245, 212, 0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-code-slash" style="font-size: 1.5rem; color: var(--accent-bright);"></i>
+                </div>
+                <h5 class="card-title" style="font-family: 'Orbitron', sans-serif;">
+                    API Integration
+                </h5>
+                <p class="card-text" style="color: var(--text-secondary);">
+                    Seamlessly integrate Brahma's neural capabilities into any application with our developer-friendly REST API endpoints.
+                </p>
+                <a href="/api-keys" class="btn btn-outline-light mt-2"><i class="bi bi-key"></i> Manage API Keys</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-5 py-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5 display-text">How <span class="glow-text">Brahma</span> Works</h2>
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="row g-5 position-relative">
+                    <!-- Connection lines between steps -->
+                    <div class="position-absolute" style="top: 60px; left: 22%; right: 22%; height: 3px; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); z-index: 0;"></div>
+                    
+                    <div class="col-md-3">
+                        <div class="text-center mb-4 position-relative">
+                            <div class="step-circle" style="width: 64px; height: 64px; border-radius: 50%; background: var(--secondary-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px rgba(108, 99, 255, 0.5);">
+                                <span style="color: white; font-family: 'Orbitron', sans-serif; font-weight: bold;">01</span>
+                            </div>
+                        </div>
+                        <h5 class="text-center">Upload Data</h5>
+                        <p class="text-center">Upload your training data in JSONL format</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center mb-4 position-relative">
+                            <div class="step-circle" style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px rgba(0, 116, 217, 0.5);">
+                                <span style="color: white; font-family: 'Orbitron', sans-serif; font-weight: bold;">02</span>
+                            </div>
+                        </div>
+                        <h5 class="text-center" style="font-family: 'Rajdhani', sans-serif; color: var(--accent-color);">Configure Model</h5>
+                        <p class="text-center" style="color: var(--text-secondary);">Select model architecture and fine-tune training parameters for optimal performance</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center mb-4 position-relative">
+                            <div class="step-circle" style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px rgba(108, 99, 255, 0.5);">
+                                <span style="color: white; font-family: 'Orbitron', sans-serif; font-weight: bold;">03</span>
+                            </div>
+                        </div>
+                        <h5 class="text-center" style="font-family: 'Rajdhani', sans-serif; color: var(--accent-color);">Neural Training</h5>
+                        <p class="text-center" style="color: var(--text-secondary);">Initiate training with one click and monitor real-time model convergence metrics</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center mb-4 position-relative">
+                            <div class="step-circle" style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent-bright); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px rgba(76, 201, 240, 0.5);">
+                                <span style="color: white; font-family: 'Orbitron', sans-serif; font-weight: bold;">04</span>
+                            </div>
+                        </div>
+                        <h5 class="text-center" style="font-family: 'Rajdhani', sans-serif; color: var(--accent-color);">Deploy & Integrate</h5>
+                        <p class="text-center" style="color: var(--text-secondary);">Seamlessly deploy your model to production and integrate via robust API endpoints</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add futuristic typing effect
+    function typingEffect(element, text, speed) {
+        let i = 0;
+        const cursor = document.createElement('span');
+        cursor.className = 'cursor-blink';
+        element.appendChild(cursor);
+        
+        function type() {
+            if (i < text.length) {
+                element.insertBefore(document.createTextNode(text.charAt(i)), cursor);
+                i++;
+                setTimeout(type, speed);
+            } else {
+                cursor.style.display = 'none';
+            }
+        }
+        
+        type();
+    }
+    
+    // Update model status with animated effect
+    const modelStatusBadge = document.getElementById('model-status-badge');
+    const modelStatus = document.getElementById('model-status');
+    
+    if ({{ model_loaded|tojson }}) {
+        modelStatus.textContent = 'System Online';
+    } else {
+        modelStatus.textContent = 'Awaiting Model';
+    }
+    
+    // Enhanced demo generation with typing effect
+    const generateBtn = document.getElementById('generate-btn');
+    const demoPrompt = document.getElementById('demo-prompt');
+    const resultContainer = document.getElementById('result-container');
+    const demoResult = document.getElementById('demo-result');
+    
+    // Add pulsing glow effect to buttons
+    const addPulseEffect = (button) => {
+        button.addEventListener('mouseover', () => {
+            button.classList.add('pulse-glow');
+        });
+        button.addEventListener('mouseout', () => {
+            button.classList.remove('pulse-glow');
+        });
+    };
+    
+    addPulseEffect(generateBtn);
+    
+    generateBtn.addEventListener('click', async function() {
+        if (!demoPrompt.value.trim()) {
+            showAlert('Please enter a prompt', 'warning');
+            return;
+        }
+        
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing Query...';
+        resultContainer.classList.remove('d-none');
+        demoResult.textContent = '';
+        
+        try {
+            const response = await fetch('/api/demo-generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prompt: demoPrompt.value,
+                    max_new_tokens: 100
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                resultContainer.classList.remove('d-none');
+                // Use the typing effect instead of directly setting text
+                demoResult.textContent = '';
+                typingEffect(demoResult, data.generated_text, 15);
+            } else {
+                showAlert('Error: ' + (data.detail || 'Failed to generate text'), 'danger');
+            }
+        } catch (error) {
+            showAlert('Error: ' + error.message, 'danger');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="bi bi-lightning-charge"></i> Generate';
+        }
+    });
+    
+    // Enhanced copy to clipboard with animation
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const textToCopy = document.getElementById(targetId).textContent;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check-circle-fill"></i> Copied';
+                this.classList.add('btn-success');
+                this.classList.remove('btn-outline-light');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-light');
+                }, 2000);
+            });
+        });
+    });
+    
+    // Add subtle animation to cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            this.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.3)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container') || document.createElement('div');
+    
+    if (!document.getElementById('alert-container')) {
+        alertContainer.id = 'alert-container';
+        alertContainer.style.position = 'fixed';
+        alertContainer.style.top = '20px';
+        alertContainer.style.right = '20px';
+        alertContainer.style.zIndex = '1050';
+        document.body.appendChild(alertContainer);
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert fade show`;
+    alert.style.backgroundColor = type === 'danger' ? 'rgba(220, 53, 69, 0.9)' : 
+                               type === 'warning' ? 'rgba(255, 193, 7, 0.9)' : 
+                               'rgba(76, 201, 240, 0.9)';
+    alert.style.color = '#fff';
+    alert.style.borderRadius = '8px';
+    alert.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+    alert.style.backdropFilter = 'blur(10px)';
+    alert.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    alert.style.margin = '0 0 10px 0';
+    alert.style.width = '300px';
+    
+    alert.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${type === 'danger' ? 'bi-exclamation-triangle' : 
+                         type === 'warning' ? 'bi-exclamation-circle' : 
+                         'bi-info-circle'} me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close ms-auto" style="filter: brightness(0) invert(1);" aria-label="Close"></button>
+        </div>
+    `;
+    
+    alertContainer.appendChild(alert);
+    
+    alert.querySelector('.btn-close').addEventListener('click', function() {
+        alert.classList.remove('show');
+        setTimeout(() => alertContainer.removeChild(alert), 300);
+    });
+    
+    setTimeout(() => {
+        alert.classList.remove('show');
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateX(100%)';
+        alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => {
+            alertContainer.removeChild(alert);
+        }, 300);
+    }, 5000);
+}
+</script>
+{% endblock %}

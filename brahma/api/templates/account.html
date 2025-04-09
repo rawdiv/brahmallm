@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - Brahma LLM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Account Settings</h1>
+        <p class="text-muted">Manage your profile and account preferences</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Account Navigation</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                    <i class="bi bi-person"></i> Profile
+                </a>
+                <a href="#password" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-shield-lock"></i> Password
+                </a>
+                <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-sliders"></i> Preferences
+                </a>
+                <a href="#api-keys" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-key"></i> API Keys
+                </a>
+                <a href="#usage" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-graph-up"></i> Usage Stats
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="tab-content">
+            <!-- Profile Tab -->
+            <div class="tab-pane fade show active" id="profile">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="profile-form">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="" readonly>
+                                    <small class="text-muted">Username cannot be changed</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" value="">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="full-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full-name" value="">
+                            </div>
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="bio" rows="3"></textarea>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary" id="save-profile-btn">
+                                    <i class="bi bi-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Password Tab -->
+            <div class="tab-pane fade" id="password">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="password-form">
+                            <div class="mb-3">
+                                <label for="current-password" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="current-password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new-password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new-password" required>
+                                <div class="progress mt-2" style="height: 5px;">
+                                    <div class="progress-bar" id="password-strength" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted">Password must be at least 8 characters long</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm-password" required>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary" id="change-password-btn">
+                                    <i class="bi bi-shield-check"></i> Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preferences Tab -->
+            <div class="tab-pane fade" id="preferences">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">User Preferences</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="preferences-form">
+                            <h6 class="mb-3">Model Settings</h6>
+                            <div class="mb-3">
+                                <label for="default-model" class="form-label">Default Model</label>
+                                <select class="form-select" id="default-model">
+                                    <option value="">Select a model</option>
+                                </select>
+                                <small class="text-muted">Model used by default when generating text</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="default-temperature" class="form-label">
+                                    Default Temperature <span id="temp-value">0.7</span>
+                                </label>
+                                <input type="range" class="form-range" id="default-temperature" min="0.1" max="1.5" step="0.1" value="0.7">
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <h6 class="mb-3">Interface Settings</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="dark-mode" checked>
+                                <label class="form-check-label" for="dark-mode">Use System Theme</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="stream-responses" checked>
+                                <label class="form-check-label" for="stream-responses">Stream responses in chat</label>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <button type="submit" class="btn btn-primary" id="save-preferences-btn">
+                                    <i class="bi bi-save"></i> Save Preferences
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Keys Tab -->
+            <div class="tab-pane fade" id="api-keys">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">API Keys</h5>
+                        <a href="/api-keys" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-key"></i> Manage Keys
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <p>Manage your API keys to integrate Brahma LLM with your applications.</p>
+                        <div class="d-grid gap-2">
+                            <a href="/api-keys" class="btn btn-primary">Go to API Key Management</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Usage Stats Tab -->
+            <div class="tab-pane fade" id="usage">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Usage Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="display-4" id="tokens-generated">0</h3>
+                                        <p class="text-muted">Tokens Generated</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="display-4" id="api-calls">0</h3>
+                                        <p class="text-muted">API Calls</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mb-3">Usage By Date</h6>
+                        <div class="bg-light p-3 rounded mb-4" style="height: 200px;">
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-graph-up display-4"></i>
+                                <p class="mt-3">Usage data will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mb-3">Usage By Model</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Tokens</th>
+                                        <th>Calls</th>
+                                        <th>Usage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="model-usage-table">
+                                    <tr>
+                                        <td colspan="4" class="text-center">No usage data available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    // Load user profile
+    loadUserProfile();
+    
+    // Load available models for preferences
+    loadModels();
+    
+    // Set up event listeners
+    setupFormHandlers();
+    
+    // Set up temperature slider
+    const tempSlider = document.getElementById('default-temperature');
+    const tempValue = document.getElementById('temp-value');
+    
+    tempSlider.addEventListener('input', function() {
+        tempValue.textContent = this.value;
+    });
+    
+    // Set up password strength meter
+    const newPassword = document.getElementById('new-password');
+    const strengthBar = document.getElementById('password-strength');
+    
+    newPassword.addEventListener('input', function() {
+        const strength = calculatePasswordStrength(this.value);
+        strengthBar.style.width = strength.percent + '%';
+        
+        // Update color based on strength
+        strengthBar.className = 'progress-bar';
+        if (strength.level === 'weak') {
+            strengthBar.classList.add('bg-danger');
+        } else if (strength.level === 'medium') {
+            strengthBar.classList.add('bg-warning');
+        } else {
+            strengthBar.classList.add('bg-success');
+        }
+    });
+});
+
+// Load user profile from API
+async function loadUserProfile() {
+    try {
+        const response = await apiRequest('/users/me');
+        if (response.ok) {
+            const user = await response.json();
+            
+            // Update profile form
+            document.getElementById('username').value = user.username;
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('full-name').value = user.full_name || '';
+            document.getElementById('bio').value = user.bio || '';
+            
+            // Load user preferences if available
+            if (user.preferences) {
+                document.getElementById('default-temperature').value = user.preferences.default_temperature || 0.7;
+                document.getElementById('temp-value').textContent = user.preferences.default_temperature || 0.7;
+                document.getElementById('stream-responses').checked = user.preferences.stream_responses !== false;
+                // Other preferences
+            }
+            
+            // Load usage stats
+            if (user.usage) {
+                document.getElementById('tokens-generated').textContent = user.usage.tokens_generated.toLocaleString() || 0;
+                document.getElementById('api-calls').textContent = user.usage.api_calls.toLocaleString() || 0;
+                // Update usage tables
+            }
+        }
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        showAlert('Failed to load user profile data', 'danger');
+    }
+}
+
+// Load models for the preferences dropdown
+async function loadModels() {
+    try {
+        const response = await apiRequest('/web/models');
+        if (response.ok) {
+            const models = await response.json();
+            const modelSelect = document.getElementById('default-model');
+            
+            // Add model options
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.name} (${model.size})`;
+                modelSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading models:', error);
+    }
+}
+
+// Set up form handlers
+function setupFormHandlers() {
+    // Profile form submission
+    document.getElementById('profile-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const userData = {
+            email: document.getElementById('email').value,
+            full_name: document.getElementById('full-name').value,
+            bio: document.getElementById('bio').value
+        };
+        
+        try {
+            const response = await apiRequest('/users/me', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            if (response.ok) {
+                showAlert('Profile updated successfully', 'success');
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to update profile', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error updating profile: ' + error.message, 'danger');
+        }
+    });
+    
+    // Password form submission
+    document.getElementById('password-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        // Validate passwords
+        if (newPassword !== confirmPassword) {
+            showAlert('New passwords do not match', 'warning');
+            return;
+        }
+        
+        if (newPassword.length < 8) {
+            showAlert('Password must be at least 8 characters long', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await apiRequest('/users/me/password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+            
+            if (response.ok) {
+                showAlert('Password updated successfully', 'success');
+                document.getElementById('password-form').reset();
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to update password', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error updating password: ' + error.message, 'danger');
+        }
+    });
+    
+    // Preferences form submission
+    document.getElementById('preferences-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const preferences = {
+            default_model: document.getElementById('default-model').value,
+            default_temperature: parseFloat(document.getElementById('default-temperature').value),
+            use_system_theme: document.getElementById('dark-mode').checked,
+            stream_responses: document.getElementById('stream-responses').checked
+        };
+        
+        try {
+            const response = await apiRequest('/users/me/preferences', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(preferences)
+            });
+            
+            if (response.ok) {
+                showAlert('Preferences saved successfully', 'success');
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to save preferences', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error saving preferences: ' + error.message, 'danger');
+        }
+    });
+}
+
+// Calculate password strength
+function calculatePasswordStrength(password) {
+    if (!password) {
+        return { level: 'weak', percent: 0 };
+    }
+    
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) {
+        strength += 25;
+    }
+    
+    // Contains lowercase letters
+    if (/[a-z]/.test(password)) {
+        strength += 25;
+    }
+    
+    // Contains uppercase letters
+    if (/[A-Z]/.test(password)) {
+        strength += 25;
+    }
+    
+    // Contains numbers or special characters
+    if (/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        strength += 25;
+    }
+    
+    // Determine level
+    let level = 'weak';
+    if (strength >= 75) {
+        level = 'strong';
+    } else if (strength >= 50) {
+        level = 'medium';
+    }
+    
+    return { level, percent: strength };
+}
+
+// Make authenticated API request
+async function apiRequest(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+
+// Show alert
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+            if (alertContainer.contains(alert)) {
+                alertContainer.removeChild(alert);
+            }
+        }, 150);
+    }, 5000);
+}
+</script>
+{% endblock %}

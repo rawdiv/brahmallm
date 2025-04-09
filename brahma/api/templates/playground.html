@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Model Playground - Brahma LLM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Model Playground</h1>
+        <p class="text-muted">Experiment with text generation using different parameters</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Generation Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="generation-form">
+                    <div class="mb-3">
+                        <label for="model-select" class="form-label">Model</label>
+                        <select class="form-select" id="model-select">
+                            <option value="current">Current Default Model</option>
+                            <!-- Models will be loaded dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="prompt-input" class="form-label">Prompt</label>
+                        <textarea class="form-control" id="prompt-input" rows="6" placeholder="Enter your prompt here..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max-length" class="form-label">
+                            Maximum Length <span class="text-muted" id="max-length-value">100</span>
+                        </label>
+                        <input type="range" class="form-range" id="max-length" min="10" max="500" step="10" value="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="temperature" class="form-label">
+                            Temperature <span class="text-muted" id="temperature-value">0.7</span>
+                        </label>
+                        <input type="range" class="form-range" id="temperature" min="0.1" max="1.5" step="0.1" value="0.7">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="top-p" class="form-label">
+                                    Top-p <span class="text-muted" id="top-p-value">0.9</span>
+                                </label>
+                                <input type="range" class="form-range" id="top-p" min="0.1" max="1.0" step="0.05" value="0.9">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="top-k" class="form-label">
+                                    Top-k <span class="text-muted" id="top-k-value">50</span>
+                                </label>
+                                <input type="range" class="form-range" id="top-k" min="1" max="100" step="1" value="50">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repetition-penalty" class="form-label">
+                            Repetition Penalty <span class="text-muted" id="repetition-penalty-value">1.0</span>
+                        </label>
+                        <input type="range" class="form-range" id="repetition-penalty" min="1.0" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="do-sample" checked>
+                            <label class="form-check-label" for="do-sample">Sample (If off, uses greedy decoding)</label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="generate-btn">
+                            <i class="bi bi-lightning-charge"></i> Generate Text
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Saved Prompts</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <input type="text" class="form-control me-2" id="prompt-name" placeholder="Prompt name...">
+                    <button class="btn btn-outline-primary" id="save-prompt-btn">Save</button>
+                </div>
+                <div class="list-group" id="saved-prompts-list">
+                    <div class="text-center py-3 text-muted">No saved prompts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Generated Output</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" id="copy-output-btn">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="clear-output-btn">
+                        <i class="bi bi-x-lg"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-center align-items-center" id="generation-spinner" style="display: none !important;">
+                    <div class="spinner-border text-primary me-2" role="status"></div>
+                    <span>Generating text...</span>
+                </div>
+                <div id="generation-output" class="p-3 bg-light rounded" style="min-height: 400px; white-space: pre-wrap;"></div>
+            </div>
+            <div class="card-footer text-muted">
+                <div class="d-flex justify-content-between">
+                    <span>Time: <span id="generation-time">-</span></span>
+                    <span>Tokens: <span id="token-count">-</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    // Load available models
+    loadModels();
+    
+    // Initialize saved prompts
+    loadSavedPrompts();
+    
+    // Set up slider value displays
+    setupSliderValueDisplays();
+    
+    // Form submission
+    document.getElementById('generation-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateText();
+    });
+    
+    // Save prompt button
+    document.getElementById('save-prompt-btn').addEventListener('click', savePrompt);
+    
+    // Clear output button
+    document.getElementById('clear-output-btn').addEventListener('click', function() {
+        document.getElementById('generation-output').textContent = '';
+        document.getElementById('generation-time').textContent = '-';
+        document.getElementById('token-count').textContent = '-';
+    });
+    
+    // Copy output button
+    document.getElementById('copy-output-btn').addEventListener('click', function() {
+        const output = document.getElementById('generation-output').textContent;
+        if (output) {
+            navigator.clipboard.writeText(output)
+                .then(() => showAlert('Output copied to clipboard', 'success'))
+                .catch(err => showAlert('Failed to copy: ' + err, 'danger'));
+        }
+    });
+});
+
+// Load models from API
+async function loadModels() {
+    try {
+        const response = await apiRequest('/web/models');
+        if (response.ok) {
+            const models = await response.json();
+            const modelSelect = document.getElementById('model-select');
+            
+            // Clear existing options except the first one
+            while (modelSelect.options.length > 1) {
+                modelSelect.remove(1);
+            }
+            
+            // Add model options
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.name} (${model.size})`;
+                modelSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading models:', error);
+    }
+}
+
+// Set up slider value displays
+function setupSliderValueDisplays() {
+    const sliders = [
+        { id: 'max-length', valueId: 'max-length-value' },
+        { id: 'temperature', valueId: 'temperature-value' },
+        { id: 'top-p', valueId: 'top-p-value' },
+        { id: 'top-k', valueId: 'top-k-value' },
+        { id: 'repetition-penalty', valueId: 'repetition-penalty-value' }
+    ];
+    
+    sliders.forEach(slider => {
+        const element = document.getElementById(slider.id);
+        const valueElement = document.getElementById(slider.valueId);
+        
+        // Set initial value
+        valueElement.textContent = element.value;
+        
+        // Update value on slider change
+        element.addEventListener('input', function() {
+            valueElement.textContent = this.value;
+        });
+    });
+}
+
+// Generate text
+async function generateText() {
+    const promptInput = document.getElementById('prompt-input');
+    const modelSelect = document.getElementById('model-select');
+    
+    if (!promptInput.value.trim()) {
+        showAlert('Please enter a prompt', 'warning');
+        return;
+    }
+    
+    // Show spinner
+    const spinner = document.getElementById('generation-spinner');
+    spinner.style.display = 'flex';
+    
+    // Clear previous output
+    const outputElement = document.getElementById('generation-output');
+    outputElement.textContent = '';
+    
+    // Get parameters
+    const params = {
+        prompt: promptInput.value,
+        max_new_tokens: parseInt(document.getElementById('max-length').value),
+        temperature: parseFloat(document.getElementById('temperature').value),
+        top_p: parseFloat(document.getElementById('top-p').value),
+        top_k: parseInt(document.getElementById('top-k').value),
+        repetition_penalty: parseFloat(document.getElementById('repetition-penalty').value),
+        do_sample: document.getElementById('do-sample').checked
+    };
+    
+    if (modelSelect.value !== 'current') {
+        params.model_id = modelSelect.value;
+    }
+    
+    const startTime = performance.now();
+    
+    try {
+        const response = await apiRequest('/web/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            outputElement.textContent = result.generated_text;
+            
+            // Display metrics
+            const endTime = performance.now();
+            const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+            document.getElementById('generation-time').textContent = timeTaken + 's';
+            
+            // Calculate approximate token count (simple estimate)
+            const words = result.generated_text.split(/\s+/).length;
+            const approxTokens = Math.round(words * 1.3); // rough estimate
+            document.getElementById('token-count').textContent = approxTokens;
+        } else {
+            const error = await response.json();
+            showAlert(error.detail || 'Text generation failed', 'danger');
+        }
+    } catch (error) {
+        showAlert('Error generating text: ' + error.message, 'danger');
+    } finally {
+        // Hide spinner
+        spinner.style.display = 'none';
+    }
+}
+
+// Save prompt
+function savePrompt() {
+    const promptInput = document.getElementById('prompt-input');
+    const promptName = document.getElementById('prompt-name');
+    
+    if (!promptInput.value.trim()) {
+        showAlert('Please enter a prompt to save', 'warning');
+        return;
+    }
+    
+    if (!promptName.value.trim()) {
+        showAlert('Please enter a name for the prompt', 'warning');
+        return;
+    }
+    
+    // Get existing saved prompts
+    const savedPrompts = JSON.parse(localStorage.getItem('savedPrompts') || '[]');
+    
+    // Add new prompt
+    savedPrompts.push({
+        id: Date.now(), // Simple unique ID
+        name: promptName.value,
+        text: promptInput.value
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('savedPrompts', JSON.stringify(savedPrompts));
+    
+    // Clear prompt name input
+    promptName.value = '';
+    
+    // Reload saved prompts list
+    loadSavedPrompts();
+    
+    showAlert('Prompt saved successfully', 'success');
+}
+
+// Load saved prompts
+function loadSavedPrompts() {
+    const savedPrompts = JSON.parse(localStorage.getItem('savedPrompts') || '[]');
+    const savedPromptsList = document.getElementById('saved-prompts-list');
+    
+    if (savedPrompts.length === 0) {
+        savedPromptsList.innerHTML = '<div class="text-center py-3 text-muted">No saved prompts</div>';
+        return;
+    }
+    
+    savedPromptsList.innerHTML = savedPrompts.map(prompt => `
+        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center load-prompt" data-id="${prompt.id}">
+            ${prompt.name}
+            <button class="btn btn-sm btn-outline-danger delete-prompt" data-id="${prompt.id}">
+                <i class="bi bi-trash"></i>
+            </button>
+        </a>
+    `).join('');
+    
+    // Add event listeners for loading prompts
+    document.querySelectorAll('.load-prompt').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const prompt = savedPrompts.find(p => p.id == id);
+            if (prompt) {
+                document.getElementById('prompt-input').value = prompt.text;
+            }
+        });
+    });
+    
+    // Add event listeners for deleting prompts
+    document.querySelectorAll('.delete-prompt').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const id = this.dataset.id;
+            const updatedPrompts = savedPrompts.filter(p => p.id != id);
+            localStorage.setItem('savedPrompts', JSON.stringify(updatedPrompts));
+            loadSavedPrompts();
+            showAlert('Prompt deleted', 'success');
+        });
+    });
+}
+
+// Make authenticated API request
+async function apiRequest(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+</script>
+{% endblock %}

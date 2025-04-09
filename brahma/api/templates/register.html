@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Brahma LLM{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-0">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">Create an Account</h2>
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="form-text">Username must be 3-20 characters and contain only letters, numbers, and underscores.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">Password must be at least 8 characters long.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="register-spinner"></span>
+                            Register
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center mt-4">
+                    <p>Already have an account? <a href="/login">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('register-form');
+    const registerSpinner = document.getElementById('register-spinner');
+    
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const fullName = document.getElementById('full_name').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        // Basic validation
+        if (password !== confirmPassword) {
+            showAlert('Passwords do not match', 'warning');
+            return;
+        }
+        
+        if (password.length < 8) {
+            showAlert('Password must be at least 8 characters long', 'warning');
+            return;
+        }
+        
+        // Disable form and show spinner
+        Array.from(registerForm.elements).forEach(el => el.disabled = true);
+        registerSpinner.classList.remove('d-none');
+        
+        try {
+            const response = await fetch('/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    full_name: fullName,
+                    password: password
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Registration successful! Redirecting to login...', 'success');
+                
+                // Redirect to login page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else {
+                showAlert(data.detail || 'Registration failed', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error: ' + error.message, 'danger');
+        } finally {
+            // Re-enable form and hide spinner
+            Array.from(registerForm.elements).forEach(el => el.disabled = false);
+            registerSpinner.classList.add('d-none');
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+            alertContainer.removeChild(alert);
+        }, 150);
+    }, 5000);
+}
+</script>
+{% endblock %}

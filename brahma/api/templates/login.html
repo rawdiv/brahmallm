@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Brahma LLM{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">Login</h2>
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="login-spinner"></span>
+                            Login
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center mt-4">
+                    <p>Don't have an account? <a href="/register">Register</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('login-form');
+    const loginSpinner = document.getElementById('login-spinner');
+    
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        // Disable form and show spinner
+        Array.from(loginForm.elements).forEach(el => el.disabled = true);
+        loginSpinner.classList.remove('d-none');
+        
+        try {
+            const response = await fetch('/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'username': username,
+                    'password': password,
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Save token and user data
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Redirect to dashboard
+                window.location.href = '/dashboard';
+            } else {
+                showAlert(data.detail || 'Login failed. Please check your credentials.', 'danger');
+            }
+        } catch (error) {
+            showAlert('Error: ' + error.message, 'danger');
+        } finally {
+            // Re-enable form and hide spinner
+            Array.from(loginForm.elements).forEach(el => el.disabled = false);
+            loginSpinner.classList.add('d-none');
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+            alertContainer.removeChild(alert);
+        }, 150);
+    }, 5000);
+}
+</script>
+{% endblock %}

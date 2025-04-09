@@ -1,0 +1,600 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - Brahma LLM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 250px);
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .chat-input-container {
+        padding: 1rem;
+        background-color: #fff;
+        border-top: 1px solid #dee2e6;
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        max-width: 80%;
+    }
+    
+    .message-user {
+        align-self: flex-end;
+        margin-left: auto;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 1rem 1rem 0 1rem;
+    }
+    
+    .message-assistant {
+        align-self: flex-start;
+        background-color: #e9ecef;
+        color: #212529;
+        border-radius: 1rem 1rem 1rem 0;
+    }
+    
+    .message-content {
+        padding: 0.75rem 1rem;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        text-align: right;
+        opacity: 0.8;
+        margin-top: 0.25rem;
+    }
+    
+    .conversation-list {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+    }
+    
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background-color: #e9ecef;
+        border-radius: 1rem 1rem 1rem 0;
+        margin-bottom: 1rem;
+    }
+    
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        margin: 0 2px;
+        background-color: #666;
+        border-radius: 50%;
+        display: inline-block;
+        animation: typing 1.4s infinite both;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0); }
+    }
+    
+    .conversation-item {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .conversation-item:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    .conversation-item.active {
+        background-color: rgba(13, 110, 253, 0.2);
+        border-left: 4px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Chat with Brahma</h1>
+        <p class="text-muted">Have a conversation with the Brahma LLM model</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Conversations</h5>
+                <button class="btn btn-sm btn-primary" id="new-chat-btn">
+                    <i class="bi bi-plus-lg"></i> New Chat
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush conversation-list" id="conversation-list">
+                    <div class="text-center py-4 text-muted" id="no-conversations-message">
+                        No conversations yet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card shadow-sm chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="text-center py-4" id="welcome-message">
+                    <img src="{{ url_for('static', path='/images/logo.png') }}" alt="Brahma LLM" height="60">
+                    <h3 class="mt-3">Welcome to Brahma Chat</h3>
+                    <p class="text-muted">Start a new conversation or select an existing one</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-container d-none" id="chat-input-container">
+                <form id="chat-form">
+                    <div class="input-group">
+                        <textarea class="form-control" placeholder="Type your message..." id="user-input" rows="2"></textarea>
+                        <button class="btn btn-primary" type="submit" id="send-button">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="stream-responses">
+                        <label class="form-check-label text-muted" for="stream-responses">Stream responses</label>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Settings
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <div class="dropdown-item">
+                                    <label for="temperature-setting" class="form-label d-flex justify-content-between">
+                                        Temperature <span id="temperature-value">0.7</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="temperature-setting" min="0.1" max="1.5" step="0.1" value="0.7">
+                                </div>
+                            </li>
+                            <li>
+                                <div class="dropdown-item">
+                                    <label for="max-tokens-setting" class="form-label d-flex justify-content-between">
+                                        Max Response Length <span id="max-tokens-value">200</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="max-tokens-setting" min="50" max="500" step="50" value="200">
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="clear-conversation">Clear Conversation</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    // DOM elements
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const welcomeMessage = document.getElementById('welcome-message');
+    const chatInputContainer = document.getElementById('chat-input-container');
+    const conversationList = document.getElementById('conversation-list');
+    const noConversationsMessage = document.getElementById('no-conversations-message');
+    const temperatureSetting = document.getElementById('temperature-setting');
+    const temperatureValue = document.getElementById('temperature-value');
+    const maxTokensSetting = document.getElementById('max-tokens-setting');
+    const maxTokensValue = document.getElementById('max-tokens-value');
+    
+    // State
+    let currentConversationId = null;
+    let conversations = JSON.parse(localStorage.getItem('conversations') || '[]');
+    
+    // Initialize
+    updateConversationList();
+    
+    // Event listeners
+    chatForm.addEventListener('submit', sendMessage);
+    document.getElementById('new-chat-btn').addEventListener('click', startNewConversation);
+    document.getElementById('clear-conversation').addEventListener('click', clearCurrentConversation);
+    
+    // For temperature slider
+    temperatureSetting.addEventListener('input', function() {
+        temperatureValue.textContent = this.value;
+    });
+    
+    // For max tokens slider
+    maxTokensSetting.addEventListener('input', function() {
+        maxTokensValue.textContent = this.value;
+    });
+    
+    // Start a new conversation
+    function startNewConversation() {
+        const conversationId = Date.now().toString();
+        const conversation = {
+            id: conversationId,
+            title: 'New Conversation',
+            messages: [],
+            createdAt: new Date().toISOString()
+        };
+        
+        conversations.push(conversation);
+        saveConversations();
+        
+        // Update UI
+        updateConversationList();
+        selectConversation(conversationId);
+    }
+    
+    // Select a conversation
+    function selectConversation(conversationId) {
+        currentConversationId = conversationId;
+        
+        // Update active class
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        const selectedItem = document.querySelector(`.conversation-item[data-id="${conversationId}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('active');
+        }
+        
+        // Hide welcome message
+        welcomeMessage.style.display = 'none';
+        
+        // Show chat input
+        chatInputContainer.classList.remove('d-none');
+        
+        // Load messages
+        loadMessages(conversationId);
+    }
+    
+    // Load messages for a conversation
+    function loadMessages(conversationId) {
+        const conversation = conversations.find(c => c.id === conversationId);
+        if (!conversation) return;
+        
+        // Clear chat window
+        chatMessages.innerHTML = '';
+        
+        // Add messages
+        conversation.messages.forEach(message => {
+            addMessageToUI(message);
+        });
+        
+        // Scroll to bottom
+        scrollToBottom();
+    }
+    
+    // Update the conversation list
+    function updateConversationList() {
+        if (conversations.length === 0) {
+            noConversationsMessage.style.display = 'block';
+            conversationList.innerHTML = '';
+            return;
+        }
+        
+        noConversationsMessage.style.display = 'none';
+        
+        // Sort conversations by most recent first
+        const sortedConversations = [...conversations].sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        conversationList.innerHTML = sortedConversations.map(conversation => {
+            const active = conversation.id === currentConversationId ? 'active' : '';
+            const time = formatTime(new Date(conversation.createdAt));
+            return `
+                <div class="list-group-item conversation-item ${active}" data-id="${conversation.id}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${conversation.title}</h6>
+                        <small class="text-muted">${time}</small>
+                    </div>
+                    <p class="mb-1 text-truncate text-muted small">
+                        ${getConversationPreview(conversation)}
+                    </p>
+                </div>
+            `;
+        }).join('');
+        
+        // Add event listeners to conversation items
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const conversationId = this.dataset.id;
+                selectConversation(conversationId);
+            });
+        });
+    }
+    
+    // Get conversation preview text
+    function getConversationPreview(conversation) {
+        if (conversation.messages.length === 0) {
+            return 'Empty conversation';
+        }
+        
+        // Get the last user message, or the last message if no user messages
+        const lastUserMessage = conversation.messages
+            .filter(m => m.role === 'user')
+            .pop();
+            
+        return lastUserMessage 
+            ? lastUserMessage.content.substring(0, 50) + (lastUserMessage.content.length > 50 ? '...' : '')
+            : conversation.messages[conversation.messages.length - 1].content.substring(0, 50) + 
+              (conversation.messages[conversation.messages.length - 1].content.length > 50 ? '...' : '');
+    }
+    
+    // Send a message
+    async function sendMessage(e) {
+        e.preventDefault();
+        
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        // Clear input
+        userInput.value = '';
+        
+        // If no conversation is selected, start a new one
+        if (!currentConversationId) {
+            startNewConversation();
+        }
+        
+        // Find the current conversation
+        const conversation = conversations.find(c => c.id === currentConversationId);
+        if (!conversation) return;
+        
+        // Add user message to the conversation
+        const userMessage = {
+            role: 'user',
+            content: message,
+            timestamp: new Date().toISOString()
+        };
+        
+        conversation.messages.push(userMessage);
+        
+        // Update conversation title if it's the first message
+        if (conversation.messages.length === 1) {
+            // Use the first few words as the title
+            conversation.title = message.split(' ').slice(0, 3).join(' ') + '...';
+        }
+        
+        // Save conversations
+        saveConversations();
+        
+        // Update UI
+        addMessageToUI(userMessage);
+        updateConversationList();
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        // Get model response
+        const useStreaming = document.getElementById('stream-responses').checked;
+        
+        if (useStreaming) {
+            // TODO: Implement streaming logic
+            // This would require server-side support for streaming responses
+            await getModelResponseNonStreaming(conversation);
+        } else {
+            await getModelResponseNonStreaming(conversation);
+        }
+    }
+    
+    // Get a non-streaming response from the model
+    async function getModelResponseNonStreaming(conversation) {
+        try {
+            const response = await apiRequest('/web/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: conversation.messages.map(m => ({
+                        role: m.role,
+                        content: m.content
+                    })),
+                    temperature: parseFloat(temperatureSetting.value),
+                    max_tokens: parseInt(maxTokensSetting.value)
+                })
+            });
+            
+            // Hide typing indicator
+            hideTypingIndicator();
+            
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Add assistant message to the conversation
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: result.response,
+                    timestamp: new Date().toISOString()
+                };
+                
+                conversation.messages.push(assistantMessage);
+                saveConversations();
+                
+                // Update UI
+                addMessageToUI(assistantMessage);
+                updateConversationList();
+            } else {
+                const error = await response.json();
+                showAlert(error.detail || 'Failed to get response from the model', 'danger');
+                
+                // Add error message to the conversation
+                const errorMessage = {
+                    role: 'assistant',
+                    content: 'Sorry, I encountered an error while processing your request.',
+                    timestamp: new Date().toISOString(),
+                    isError: true
+                };
+                
+                conversation.messages.push(errorMessage);
+                saveConversations();
+                
+                // Update UI
+                addMessageToUI(errorMessage);
+            }
+        } catch (error) {
+            // Hide typing indicator
+            hideTypingIndicator();
+            
+            console.error('Error getting model response:', error);
+            showAlert('Error communicating with the server: ' + error.message, 'danger');
+            
+            // Add error message to the conversation
+            const errorMessage = {
+                role: 'assistant',
+                content: 'Sorry, I encountered an error while processing your request.',
+                timestamp: new Date().toISOString(),
+                isError: true
+            };
+            
+            conversation.messages.push(errorMessage);
+            saveConversations();
+            
+            // Update UI
+            addMessageToUI(errorMessage);
+        }
+    }
+    
+    // Add a message to the UI
+    function addMessageToUI(message) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message message-${message.role}`;
+        
+        const content = message.isError 
+            ? `<div class="message-content text-danger">${message.content}</div>`
+            : `<div class="message-content">${formatMessageContent(message.content)}</div>`;
+            
+        messageElement.innerHTML = `
+            ${content}
+            <div class="message-time">${formatTime(new Date(message.timestamp))}</div>
+        `;
+        
+        chatMessages.appendChild(messageElement);
+        scrollToBottom();
+    }
+    
+    // Format message content (convert markdown, etc)
+    function formatMessageContent(content) {
+        // For simplicity, we'll just escape HTML and convert newlines to <br>
+        // In a real app, you might want to use a markdown library
+        const escaped = escapeHtml(content);
+        return escaped.replace(/\n/g, '<br>');
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Show typing indicator
+    function showTypingIndicator() {
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'typing-indicator';
+        typingIndicator.id = 'typing-indicator';
+        typingIndicator.innerHTML = `
+            <span></span>
+            <span></span>
+            <span></span>
+        `;
+        
+        chatMessages.appendChild(typingIndicator);
+        scrollToBottom();
+    }
+    
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    // Scroll to the bottom of the chat
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Format time for display
+    function formatTime(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Save conversations to localStorage
+    function saveConversations() {
+        localStorage.setItem('conversations', JSON.stringify(conversations));
+    }
+    
+    // Clear the current conversation
+    function clearCurrentConversation() {
+        if (!currentConversationId) return;
+        
+        const conversation = conversations.find(c => c.id === currentConversationId);
+        if (!conversation) return;
+        
+        // Clear messages
+        conversation.messages = [];
+        saveConversations();
+        
+        // Update UI
+        loadMessages(currentConversationId);
+        updateConversationList();
+        
+        // Close dropdown
+        const dropdown = bootstrap.Dropdown.getInstance(document.querySelector('.dropdown-toggle'));
+        if (dropdown) {
+            dropdown.hide();
+        }
+    }
+    
+    // Make authenticated API request
+    async function apiRequest(url, options = {}) {
+        const token = localStorage.getItem('access_token');
+        
+        const headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+        };
+        
+        return fetch(url, {
+            ...options,
+            headers
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Brahma LLM Platform{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom styles -->
+    <link href="{{ url_for('static', path='/css/styles.css') }}" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Brahma LLM</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-door"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ui"><i class="bi bi-chat-square-text"></i> Web UI</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs"><i class="bi bi-file-code"></i> API Docs</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Neural network animated particles background -->
+    <div id="particles-js"></div>
+    
+    <div class="container mt-4 animate__animated animate__fadeIn animate__delay-1s">
+        <div id="alert-container"></div>
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="mt-auto py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-secondary">Brahma LLM Platform &copy; 2023 | <span class="glow-text">Powering the Future with AI</span></p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- Core JS -->
+    <script>
+        // Initialize particles.js for background effect
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS('particles-js', {
+                    particles: {
+                        number: { value: 80, density: { enable: true, value_area: 800 } },
+                        color: { value: '#6c63ff' },
+                        shape: { type: 'circle' },
+                        opacity: { value: 0.1, random: true },
+                        size: { value: 3, random: true },
+                        line_linked: {
+                            enable: true,
+                            distance: 150,
+                            color: '#4cc9f0',
+                            opacity: 0.1,
+                            width: 1
+                        },
+                        move: {
+                            enable: true,
+                            speed: 1,
+                            direction: 'none',
+                            random: true,
+                            straight: false,
+                            out_mode: 'out',
+                            bounce: false
+                        }
+                    },
+                    interactivity: {
+                        detect_on: 'canvas',
+                        events: {
+                            onhover: { enable: true, mode: 'grab' },
+                            onclick: { enable: true, mode: 'push' },
+                            resize: true
+                        },
+                        modes: {
+                            grab: { distance: 140, line_linked: { opacity: 0.3 } },
+                            push: { particles_nb: 3 }
+                        }
+                    },
+                    retina_detect: true
+                });
+            }
+                const centerY = boundingRect.height / 2;
+                const percentX = (x - centerX) / centerX;
+                const percentY = (y - centerY) / centerY;
+                
+                el.style.transform = `perspective(1000px) rotateY(${percentX * 3}deg) rotateX(${-percentY * 3}deg) scale3d(1.02, 1.02, 1.02)`;
+                
+                // Add a highlight effect
+                if (el.classList.contains('card')) {
+                    const shine = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%)`;
+                    el.style.backgroundImage = shine;
+                }
+            });
+            
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+                if (el.classList.contains('card')) {
+                    el.style.backgroundImage = '';
+                }
+            });
+        });
+        
+        // Add typed text effect to title elements on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const titles = document.querySelectorAll('h1, h2.display-text');
+            titles.forEach(title => {
+                const text = title.textContent;
+                title.textContent = '';
+                title.style.minHeight = '1em';
+                
+                let i = 0;
+                const typing = setInterval(() => {
+                    if (i < text.length) {
+                        title.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typing);
+                    }
+                }, 50);
+            });
+        });
+        
+        // Update active nav item based on current page
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
